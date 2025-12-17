@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Pipelines Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@100;300;400&family=Atkinson+Hyperlegible+Mono:wght@300&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    :root {
+      --black: #171717;
+      --white: #FFFFFF;
+      --grey-light: #FAFAFA;
+      --grey-medium: #A9A9A9;
+      --mint: #00FBA9;
+      --coral: #FF4C00;
+      --blue: #3941EB;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      background-color: var(--grey-light);
+      color: var(--black);
+      line-height: 1.4;
+      font-size: 18px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+
+    h1 {
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      font-size: 76px;
+      line-height: 1.1;
+      margin-bottom: 48px;
+      color: var(--black);
+    }
+
+    h1 span.underscore {
+      color: var(--blue);
+    }
+
+    h2 {
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      font-size: 47px;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      color: var(--black);
+    }
+
+    h3 {
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      font-size: 29px;
+      line-height: 1.1;
+      color: var(--black);
+    }
+
+    h4 {
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      font-size: 23px;
+      line-height: 1.1;
+      color: var(--black);
+    }
+
+    .mono {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-weight: 300;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Pipeline Tabs */
+    .pipeline-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+
+    .pipeline-tab {
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 12px 32px;
+      border: 1px solid var(--black);
+      border-radius: 9999px;
+      background: transparent;
+      color: var(--black);
+      cursor: pointer;
+      transition: all 150ms ease-out;
+    }
+
+    .pipeline-tab:hover {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .pipeline-tab.active {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    /* Pipeline Header */
+    .pipeline-header {
+      margin-bottom: 32px;
+    }
+
+    .pipeline-name {
+      font-size: 47px;
+      margin-bottom: 8px;
+    }
+
+    .pipeline-stats {
+      display: flex;
+      gap: 32px;
+    }
+
+    .pipeline-stat {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .pipeline-stat-value {
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 100;
+      font-size: 47px;
+      line-height: 1.1;
+      color: var(--blue);
+    }
+
+    .pipeline-stat-label {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-weight: 300;
+      font-size: 14px;
+      text-transform: uppercase;
+      color: var(--grey-medium);
+      letter-spacing: 0.05em;
+    }
+
+    /* Client Cards */
+    .client-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .client-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--grey-light);
+    }
+
+    .client-name {
+      font-size: 29px;
+    }
+
+    .client-stats {
+      display: flex;
+      gap: 24px;
+    }
+
+    .stat {
+      text-align: right;
+    }
+
+    .stat-value {
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 100;
+      font-size: 29px;
+      line-height: 1.1;
+    }
+
+    .stat-value.positive {
+      color: var(--blue);
+    }
+
+    .stat-label {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-weight: 300;
+      font-size: 14px;
+      text-transform: uppercase;
+      color: var(--grey-medium);
+      letter-spacing: 0.05em;
+    }
+
+    /* Client Data Section */
+    .client-data {
+      background: var(--grey-light);
+      border-radius: 8px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .client-data-header {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      cursor: pointer;
+      gap: 12px;
+    }
+
+    .client-data-header:hover {
+      background: rgba(0,0,0,0.02);
+    }
+
+    .client-data-toggle {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--black);
+      transition: transform 150ms ease-out;
+    }
+
+    .client-data.expanded .client-data-toggle {
+      transform: rotate(90deg);
+    }
+
+    .client-data-title {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-weight: 300;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--grey-medium);
+    }
+
+    .client-data-count {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-size: 12px;
+      color: var(--grey-medium);
+      margin-left: auto;
+    }
+
+    .client-data-list {
+      display: none;
+      padding: 0 16px 16px 48px;
+    }
+
+    .client-data.expanded .client-data-list {
+      display: block;
+    }
+
+    .client-data-item {
+      font-size: 16px;
+      padding: 6px 0;
+      color: var(--black);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .client-data-item::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: var(--blue);
+      border-radius: 50%;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Requirement Sections */
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      cursor: pointer;
+    }
+
+    .section-toggle {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--black);
+      transition: transform 150ms ease-out;
+    }
+
+    .section.expanded .section-toggle {
+      transform: rotate(90deg);
+    }
+
+    .section-name {
+      font-size: 23px;
+    }
+
+    .section-count {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-size: 12px;
+      color: var(--grey-medium);
+      text-transform: uppercase;
+    }
+
+    .section-content {
+      display: none;
+      padding-left: 36px;
+    }
+
+    .section.expanded .section-content {
+      display: block;
+    }
+
+    /* Requirements/Tiers */
+    .requirement {
+      border: 1px solid var(--grey-light);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      transition: border-color 150ms ease-out;
+    }
+
+    .requirement:hover {
+      border-color: var(--grey-medium);
+    }
+
+    .requirement-header {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      cursor: pointer;
+      gap: 16px;
+      background: var(--white);
+    }
+
+    .requirement-toggle {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--black);
+      transition: transform 150ms ease-out;
+    }
+
+    .requirement.expanded .requirement-toggle {
+      transform: rotate(90deg);
+    }
+
+    .requirement-info {
+      flex: 1;
+    }
+
+    .requirement-name {
+      font-size: 18px;
+      margin-bottom: 2px;
+    }
+
+    .requirement-subname {
+      font-size: 14px;
+      color: var(--grey-medium);
+    }
+
+    .requirement-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    /* Priority Pills */
+    .priority-pill {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-weight: 300;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 12px;
+      border-radius: 9999px;
+      background: var(--grey-light);
+      color: var(--black);
+    }
+
+    .priority-pill.critical {
+      background: var(--coral);
+      color: var(--white);
+    }
+
+    .priority-pill.high {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    /* Status Toggle */
+    .status-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 9999px;
+      border: 1px solid var(--grey-medium);
+      background: transparent;
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 150ms ease-out;
+      color: var(--black);
+    }
+
+    .status-toggle:hover {
+      border-color: var(--black);
+    }
+
+    .status-toggle.complete {
+      background: var(--mint);
+      border-color: var(--mint);
+      color: var(--black);
+    }
+
+    .status-toggle .icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Requirement Details Panel */
+    .requirement-details {
+      display: none;
+      background: var(--grey-light);
+      padding: 16px;
+      padding-left: 56px;
+    }
+
+    .requirement.expanded .requirement-details {
+      display: block;
+    }
+
+    /* Bullet Points */
+    .bullets {
+      margin-bottom: 16px;
+    }
+
+    .bullet {
+      font-size: 16px;
+      padding: 6px 0;
+      color: var(--black);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .bullet::before {
+      content: "";
+      width: 6px;
+      height: 6px;
+      background: var(--black);
+      border-radius: 50%;
+      margin-top: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Technologies */
+    .technologies-header {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-weight: 300;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--grey-medium);
+      margin-bottom: 8px;
+    }
+
+    .technology {
+      background: var(--white);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 8px;
+    }
+
+    .technology:last-child {
+      margin-bottom: 0;
+    }
+
+    .technology-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .technology-name {
+      font-size: 16px;
+      font-weight: 400;
+    }
+
+    .technology-type {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-weight: 300;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--grey-medium);
+    }
+
+    .technology-details {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    /* Stage Pills */
+    .stage-pill {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-weight: 300;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: var(--grey-light);
+      color: var(--black);
+    }
+
+    .stage-pill.deployed {
+      background: var(--mint);
+      color: var(--black);
+    }
+
+    .stage-pill.testing {
+      background: var(--blue);
+      color: var(--white);
+    }
+
+    /* Progress Bar */
+    .progress-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .progress-bar {
+      flex: 1;
+      height: 8px;
+      background: var(--grey-light);
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--blue);
+      border-radius: 4px;
+      transition: width 150ms ease-out;
+    }
+
+    .progress-value {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-weight: 300;
+      font-size: 14px;
+      text-transform: uppercase;
+      min-width: 48px;
+      text-align: right;
+    }
+
+    /* Links */
+    .technology-links {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .tech-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      color: var(--blue);
+      text-decoration: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: background 150ms ease-out;
+    }
+
+    .tech-link:hover {
+      background: var(--grey-light);
+    }
+
+    .tech-link .icon {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Loading & Empty States */
+    .loading, .empty-state {
+      text-align: left;
+      padding: 48px 0;
+      color: var(--grey-medium);
+    }
+
+    /* Config Banner */
+    .config-banner {
+      background: var(--black);
+      color: var(--white);
+      padding: 16px 24px;
+      border-radius: 8px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .config-banner p {
+      flex: 1;
+    }
+
+    .config-input {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .config-input input {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-size: 14px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 9999px;
+      width: 400px;
+      background: var(--white);
+      color: var(--black);
+    }
+
+    .config-input button {
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 8px 24px;
+      border: none;
+      border-radius: 9999px;
+      background: var(--mint);
+      color: var(--black);
+      cursor: pointer;
+      transition: opacity 150ms ease-out;
+    }
+
+    .config-input button:hover {
+      opacity: 0.9;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    /* Header Actions */
+    .header-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .refresh-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 8px 24px;
+      border: 1px solid var(--black);
+      border-radius: 9999px;
+      background: transparent;
+      color: var(--black);
+      cursor: pointer;
+      transition: all 150ms ease-out;
+    }
+
+    .refresh-btn:hover {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .refresh-btn .icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    .last-updated {
+      font-size: 14px;
+      color: var(--grey-medium);
+    }
+
+    /* Progress edit input */
+    .progress-edit {
+      width: 48px;
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-size: 14px;
+      padding: 4px 8px;
+      border: 1px solid var(--grey-medium);
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .progress-edit:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 59px;
+      }
+
+      h2, .pipeline-name {
+        font-size: 37px;
+      }
+
+      .container {
+        padding: 32px 16px;
+      }
+
+      .client-card {
+        padding: 24px 16px;
+      }
+
+      .requirement-header {
+        flex-wrap: wrap;
+      }
+
+      .requirement-meta {
+        width: 100%;
+        margin-top: 8px;
+        padding-left: 40px;
+      }
+
+      .config-input {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .config-input input {
+        width: 100%;
+      }
+
+      .pipeline-tabs {
+        gap: 8px;
+      }
+
+      .pipeline-tab {
+        padding: 8px 16px;
+        font-size: 14px;
+      }
+
+      .pipeline-stats {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .pipeline-stat-value {
+        font-size: 37px;
+      }
+
+      .section-content {
+        padding-left: 16px;
+      }
+
+      .requirement-details {
+        padding-left: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>AI Pipelines<span class="underscore">_</span></h1>
+
+    <div id="configBanner" class="config-banner">
+      <p>Enter your Google Apps Script Web App URL to connect:</p>
+      <div class="config-input">
+        <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/...">
+        <button onclick="saveApiUrl()">Connect</button>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="refresh-btn" onclick="loadData()">
+        <i data-lucide="refresh-cw" class="icon"></i>
+        Refresh
+      </button>
+      <span id="lastUpdated" class="last-updated"></span>
+    </div>
+
+    <div id="pipelineTabs" class="pipeline-tabs"></div>
+
+    <div id="dashboard">
+      <div class="loading">Loading pipeline data...</div>
+    </div>
+  </div>
+
+  <script>
+    let API_URL = localStorage.getItem('pipelineApiUrl') || 'https://script.google.com/macros/s/AKfycbxFlCrP50I-WM4i7dOfuIcLLFmSoPXCqVNtaIlQCo3Nl3ia8wBwj_YumupHBAS80HOt7Q/exec';
+    let allData = [];
+    let activePipelineId = null;
+
+    if (API_URL) {
+      document.getElementById('configBanner').classList.add('hidden');
+      loadData();
+    } else {
+      document.getElementById('dashboard').innerHTML = '<p style="color: var(--grey-medium);">Please configure your Google Apps Script URL above to load data.</p>';
+    }
+
+    function saveApiUrl() {
+      const url = document.getElementById('apiUrlInput').value.trim();
+      if (url) {
+        API_URL = url;
+        localStorage.setItem('pipelineApiUrl', url);
+        document.getElementById('configBanner').classList.add('hidden');
+        loadData();
+      }
+    }
+
+    async function loadData() {
+      try {
+        document.getElementById('dashboard').innerHTML = '<div class="loading">Loading pipeline data...</div>';
+        document.getElementById('pipelineTabs').innerHTML = '';
+
+        const response = await fetch(`${API_URL}?action=getData`);
+        const result = await response.json();
+
+        if (result.success) {
+          allData = result.data;
+          renderPipelineTabs(allData);
+
+          if (allData.length > 0 && !activePipelineId) {
+            activePipelineId = allData[0].id;
+          }
+
+          renderDashboard();
+          document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+        } else {
+          document.getElementById('dashboard').innerHTML = '<p style="color: var(--coral);">Error loading data. Please check your API URL.</p>';
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        document.getElementById('dashboard').innerHTML = '<p style="color: var(--coral);">Failed to connect. Please check your API URL and try again.</p>';
+      }
+
+      lucide.createIcons();
+    }
+
+    function renderPipelineTabs(pipelines) {
+      const tabsContainer = document.getElementById('pipelineTabs');
+
+      if (!pipelines || pipelines.length === 0) {
+        tabsContainer.innerHTML = '';
+        return;
+      }
+
+      tabsContainer.innerHTML = pipelines.map(pipeline => `
+        <button class="pipeline-tab ${pipeline.id === activePipelineId ? 'active' : ''}"
+                onclick="selectPipeline('${pipeline.id}')">
+          ${pipeline.name}
+        </button>
+      `).join('');
+    }
+
+    function selectPipeline(pipelineId) {
+      activePipelineId = pipelineId;
+
+      document.querySelectorAll('.pipeline-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      event.target.classList.add('active');
+
+      renderDashboard();
+    }
+
+    function renderDashboard() {
+      const dashboard = document.getElementById('dashboard');
+      const pipeline = allData.find(p => p.id === activePipelineId);
+
+      if (!pipeline) {
+        dashboard.innerHTML = '<p class="empty-state">No pipeline data found. Add some data to your Google Sheet.</p>';
+        return;
+      }
+
+      const clients = pipeline.clients || [];
+      const totalReqs = clients.reduce((sum, c) =>
+        sum + (c.sections || []).reduce((s, sec) => s + (sec.requirements?.length || 0), 0), 0);
+      const completedReqs = clients.reduce((sum, c) =>
+        sum + (c.sections || []).reduce((s, sec) =>
+          s + (sec.requirements?.filter(r => r.status === 'Complete').length || 0), 0), 0);
+
+      dashboard.innerHTML = `
+        <div class="pipeline-section active">
+          <div class="pipeline-header">
+            <h2 class="pipeline-name">${pipeline.name}</h2>
+            <div class="pipeline-stats">
+              <div class="pipeline-stat">
+                <span class="pipeline-stat-value">${clients.length}</span>
+                <span class="pipeline-stat-label">Clients</span>
+              </div>
+              <div class="pipeline-stat">
+                <span class="pipeline-stat-value">${completedReqs}/${totalReqs}</span>
+                <span class="pipeline-stat-label">Requirements Complete</span>
+              </div>
+            </div>
+          </div>
+          <div class="clients">
+            ${clients.length > 0 ? clients.map(client => renderClient(client)).join('') : '<p class="empty-state">No clients in this pipeline yet.</p>'}
+          </div>
+        </div>
+      `;
+
+      lucide.createIcons();
+    }
+
+    function renderClient(client) {
+      const sections = client.sections || [];
+      const totalReqs = sections.reduce((sum, sec) => sum + (sec.requirements?.length || 0), 0);
+      const completedReqs = sections.reduce((sum, sec) =>
+        sum + (sec.requirements?.filter(r => r.status === 'Complete').length || 0), 0);
+      const clientData = client.data || [];
+
+      return `
+        <div class="client-card">
+          <div class="client-header">
+            <h3 class="client-name">${client.name}</h3>
+            <div class="client-stats">
+              <div class="stat">
+                <div class="stat-value positive">${completedReqs}/${totalReqs}</div>
+                <div class="stat-label">Complete</div>
+              </div>
+            </div>
+          </div>
+
+          ${clientData.length > 0 ? `
+            <div class="client-data" data-id="data-${client.id}">
+              <div class="client-data-header" onclick="toggleClientData('data-${client.id}')">
+                <div class="client-data-toggle">
+                  <i data-lucide="chevron-right" class="icon"></i>
+                </div>
+                <span class="client-data-title">Client Data</span>
+                <span class="client-data-count">${clientData.length} items</span>
+              </div>
+              <div class="client-data-list">
+                ${clientData.map(d => `<div class="client-data-item">${d.item}</div>`).join('')}
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="sections">
+            ${sections.map(section => renderSection(section)).join('')}
+            ${sections.length === 0 ? '<p style="color: var(--grey-medium);">No requirement sections added yet.</p>' : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSection(section) {
+      const requirements = section.requirements || [];
+      const completedReqs = requirements.filter(r => r.status === 'Complete').length;
+
+      return `
+        <div class="section expanded" data-id="${section.id}">
+          <div class="section-header" onclick="toggleSection('${section.id}')">
+            <div class="section-toggle">
+              <i data-lucide="chevron-right" class="icon"></i>
+            </div>
+            <h4 class="section-name">${section.name}</h4>
+            <span class="section-count">${completedReqs}/${requirements.length}</span>
+          </div>
+          <div class="section-content">
+            ${requirements.map(req => renderRequirement(req)).join('')}
+            ${requirements.length === 0 ? '<p style="color: var(--grey-medium); font-size: 14px;">No requirements in this section.</p>' : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRequirement(req) {
+      const priorityClass = req.priority?.toLowerCase() || '';
+      const isComplete = req.status === 'Complete';
+      const bullets = req.bullets || [];
+      const technologies = req.technologies || [];
+
+      return `
+        <div class="requirement" data-id="${req.id}">
+          <div class="requirement-header" onclick="toggleRequirement('${req.id}')">
+            <div class="requirement-toggle">
+              <i data-lucide="chevron-right" class="icon"></i>
+            </div>
+            <div class="requirement-info">
+              <div class="requirement-name">${req.name}</div>
+              ${req.subname ? `<div class="requirement-subname">${req.subname}</div>` : ''}
+            </div>
+            <div class="requirement-meta">
+              ${req.priority ? `<span class="priority-pill ${priorityClass}">${req.priority}</span>` : ''}
+              <button class="status-toggle ${isComplete ? 'complete' : ''}" onclick="event.stopPropagation(); toggleStatus('${req.id}', '${isComplete ? 'In Progress' : 'Complete'}')">
+                <i data-lucide="${isComplete ? 'check-circle' : 'circle'}" class="icon"></i>
+                ${isComplete ? 'Complete' : 'In Progress'}
+              </button>
+            </div>
+          </div>
+          <div class="requirement-details">
+            ${bullets.length > 0 ? `
+              <div class="bullets">
+                ${bullets.map(b => `<div class="bullet">${b.text}</div>`).join('')}
+              </div>
+            ` : ''}
+            ${technologies.length > 0 ? `
+              <div class="technologies-header">Technologies</div>
+              ${technologies.map(tech => renderTechnology(tech)).join('')}
+            ` : ''}
+            ${bullets.length === 0 && technologies.length === 0 ? '<p style="color: var(--grey-medium); font-size: 14px;">No details added yet.</p>' : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTechnology(tech) {
+      const stageClass = tech.stage?.toLowerCase() || '';
+      const links = tech.links || [];
+
+      return `
+        <div class="technology" data-id="${tech.id}">
+          <div class="technology-header">
+            <span class="technology-name">${tech.name}</span>
+            <span class="technology-type">${tech.type || 'Technology'}</span>
+          </div>
+          <div class="technology-details">
+            <span class="stage-pill ${stageClass}">${tech.stage || 'Research'}</span>
+            <div class="progress-container">
+              <div class="progress-bar" onclick="editProgress('${tech.id}', event)">
+                <div class="progress-fill" style="width: ${tech.progress || 0}%"></div>
+              </div>
+              <input type="number" class="progress-edit" value="${tech.progress || 0}" min="0" max="100"
+                     onchange="updateProgress('${tech.id}', this.value)"
+                     onclick="event.stopPropagation()">
+              <span class="progress-value">%</span>
+            </div>
+          </div>
+          ${links.length > 0 ? `
+            <div class="technology-links">
+              ${links.map(link => `
+                <a href="${link.url}" target="_blank" class="tech-link">
+                  <i data-lucide="external-link" class="icon"></i>
+                  ${link.label}
+                </a>
+              `).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function toggleClientData(id) {
+      const el = document.querySelector(`.client-data[data-id="${id}"]`);
+      el.classList.toggle('expanded');
+      lucide.createIcons();
+    }
+
+    function toggleSection(id) {
+      const el = document.querySelector(`.section[data-id="${id}"]`);
+      el.classList.toggle('expanded');
+      lucide.createIcons();
+    }
+
+    function toggleRequirement(id) {
+      const el = document.querySelector(`.requirement[data-id="${id}"]`);
+      el.classList.toggle('expanded');
+      lucide.createIcons();
+    }
+
+    async function toggleStatus(id, newStatus) {
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'updateRequirementStatus',
+            id: id,
+            status: newStatus
+          })
+        });
+        loadData();
+      } catch (error) {
+        console.error('Error updating status:', error);
+      }
+    }
+
+    async function updateProgress(id, progress) {
+      const value = Math.min(100, Math.max(0, parseInt(progress) || 0));
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'updateTechnologyProgress',
+            id: id,
+            progress: value
+          })
+        });
+        loadData();
+      } catch (error) {
+        console.error('Error updating progress:', error);
+      }
+    }
+
+    function editProgress(id, event) {
+      const rect = event.target.getBoundingClientRect();
+      const x = event.clientX - rect.left;
+      const width = rect.width;
+      const progress = Math.round((x / width) * 100);
+      updateProgress(id, progress);
+    }
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>
