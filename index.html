@@ -1292,10 +1292,41 @@
       lucide.createIcons();
     }
 
-    // Optimistic update helper
+    // Optimistic update helper - preserves expanded states
     function updateLocalData(updateFn) {
+      // Save expanded states before re-rendering
+      const expandedSections = new Set();
+      const expandedRequirements = new Set();
+      const expandedClientData = new Set();
+
+      document.querySelectorAll('.section.expanded').forEach(el => {
+        expandedSections.add(el.dataset.id);
+      });
+      document.querySelectorAll('.requirement.expanded').forEach(el => {
+        expandedRequirements.add(el.dataset.id);
+      });
+      document.querySelectorAll('.client-data.expanded').forEach(el => {
+        expandedClientData.add(el.dataset.id);
+      });
+
       updateFn(allData);
       renderDashboard();
+
+      // Restore expanded states after re-rendering
+      expandedSections.forEach(id => {
+        const el = document.querySelector(`.section[data-id="${id}"]`);
+        if (el) el.classList.add('expanded');
+      });
+      expandedRequirements.forEach(id => {
+        const el = document.querySelector(`.requirement[data-id="${id}"]`);
+        if (el) el.classList.add('expanded');
+      });
+      expandedClientData.forEach(id => {
+        const el = document.querySelector(`.client-data[data-id="${id}"]`);
+        if (el) el.classList.add('expanded');
+      });
+
+      lucide.createIcons();
     }
 
     async function toggleStatus(id, newStatus) {
