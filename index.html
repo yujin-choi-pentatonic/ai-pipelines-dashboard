@@ -1048,6 +1048,119 @@
       margin-right: 8px;
     }
 
+    /* View Diagram Button */
+    .view-diagram-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 12px 24px;
+      border: 1px solid var(--black);
+      border-radius: 9999px;
+      background: transparent;
+      color: var(--black);
+      cursor: pointer;
+      transition: all 150ms ease-out;
+      margin-bottom: 24px;
+    }
+
+    .view-diagram-btn:hover {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .view-diagram-btn .icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Diagram Full-Screen Modal */
+    .diagram-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--white);
+      z-index: 1000;
+      overflow: auto;
+    }
+
+    .diagram-modal.active {
+      display: block;
+    }
+
+    .diagram-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px 40px;
+      border-bottom: 1px solid var(--grey-light);
+      position: sticky;
+      top: 0;
+      background: var(--white);
+      z-index: 10;
+    }
+
+    .diagram-modal-title {
+      font-size: 29px;
+    }
+
+    .diagram-modal-close {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 10px 24px;
+      border: 1px solid var(--black);
+      border-radius: 9999px;
+      background: transparent;
+      color: var(--black);
+      cursor: pointer;
+      transition: all 150ms ease-out;
+    }
+
+    .diagram-modal-close:hover {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .diagram-modal-close .icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    .diagram-modal-content {
+      padding: 40px;
+      min-height: calc(100vh - 100px);
+    }
+
+    .diagram-modal .workflow-canvas {
+      min-height: auto;
+    }
+
+    .diagram-modal .workflow-row {
+      margin-bottom: 32px;
+    }
+
+    .diagram-modal .workflow-node {
+      padding: 16px 24px;
+      min-width: 140px;
+    }
+
+    .diagram-modal .workflow-node-label {
+      font-size: 16px;
+    }
+
     /* Node Detail Modal */
     .node-modal {
       display: none;
@@ -1057,7 +1170,7 @@
       width: 100%;
       height: 100%;
       background: rgba(0, 0, 0, 0.5);
-      z-index: 1000;
+      z-index: 1100;
       align-items: center;
       justify-content: center;
     }
@@ -1204,6 +1317,18 @@
   </style>
 </head>
 <body>
+  <!-- Diagram Full-Screen Modal -->
+  <div id="diagramModal" class="diagram-modal">
+    <div class="diagram-modal-header">
+      <h3 class="diagram-modal-title" id="diagramModalTitle">Workflow Diagram</h3>
+      <button class="diagram-modal-close" onclick="closeDiagramModal()">
+        <i data-lucide="x" class="icon"></i>
+        Close
+      </button>
+    </div>
+    <div class="diagram-modal-content" id="diagramModalContent"></div>
+  </div>
+
   <!-- Node Detail Modal -->
   <div id="nodeModal" class="node-modal" onclick="closeNodeModal(event)">
     <div class="node-modal-content" onclick="event.stopPropagation()">
@@ -1587,7 +1712,6 @@
       const expandedSections = new Set();
       const expandedRequirements = new Set();
       const expandedClientData = new Set();
-      const expandedDiagrams = new Set();
 
       document.querySelectorAll('.section.expanded').forEach(el => {
         expandedSections.add(el.dataset.id);
@@ -1597,9 +1721,6 @@
       });
       document.querySelectorAll('.client-data.expanded').forEach(el => {
         expandedClientData.add(el.dataset.id);
-      });
-      document.querySelectorAll('.workflow-diagram.expanded').forEach(el => {
-        expandedDiagrams.add(el.dataset.id);
       });
 
       updateFn(allData);
@@ -1616,10 +1737,6 @@
       });
       expandedClientData.forEach(id => {
         const el = document.querySelector(`.client-data[data-id="${id}"]`);
-        if (el) el.classList.add('expanded');
-      });
-      expandedDiagrams.forEach(id => {
-        const el = document.querySelector(`.workflow-diagram[data-id="${id}"]`);
         if (el) el.classList.add('expanded');
       });
 
@@ -1825,21 +1942,35 @@
         return '';
       }
 
+      // Store diagram data for modal
+      const diagramJson = JSON.stringify(diagramData).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
       return `
-        <div class="workflow-diagram expanded" data-id="diagram-${client.id}">
-          <div class="workflow-header" onclick="toggleDiagram('diagram-${client.id}')">
-            <div class="workflow-toggle">
-              <i data-lucide="chevron-right" class="icon"></i>
-            </div>
-            <span class="workflow-title">Workflow Diagram</span>
-          </div>
-          <div class="workflow-content">
-            <div class="workflow-canvas">
-              ${diagramData.rows.map(row => renderDiagramRow(row)).join('')}
-            </div>
-          </div>
+        <button class="view-diagram-btn" onclick="openDiagramModal('${client.name}', '${diagramJson}')">
+          <i data-lucide="git-branch" class="icon"></i>
+          View Workflow Diagram
+        </button>
+      `;
+    }
+
+    function openDiagramModal(clientName, diagramJson) {
+      const diagramData = JSON.parse(diagramJson.replace(/&quot;/g, '"'));
+
+      document.getElementById('diagramModalTitle').textContent = clientName + ' - Workflow Diagram';
+      document.getElementById('diagramModalContent').innerHTML = `
+        <div class="workflow-canvas">
+          ${diagramData.rows.map(row => renderDiagramRow(row)).join('')}
         </div>
       `;
+
+      document.getElementById('diagramModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      lucide.createIcons();
+    }
+
+    function closeDiagramModal() {
+      document.getElementById('diagramModal').classList.remove('active');
+      document.body.style.overflow = '';
     }
 
     function renderDiagramRow(row) {
@@ -1898,12 +2029,6 @@
       `;
     }
 
-    function toggleDiagram(id) {
-      const el = document.querySelector(`.workflow-diagram[data-id="${id}"]`);
-      el.classList.toggle('expanded');
-      lucide.createIcons();
-    }
-
     // Node detail modal
     function showNodeDetails(node) {
       event.stopPropagation();
@@ -1922,10 +2047,11 @@
       }
     }
 
-    // Close modal on Escape key
+    // Close modals on Escape key
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         closeNodeModal();
+        closeDiagramModal();
       }
     });
 
