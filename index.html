@@ -860,6 +860,279 @@
       border-color: var(--blue);
     }
 
+    /* Workflow Diagram */
+    .workflow-diagram {
+      background: var(--grey-light);
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+
+    .workflow-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      cursor: pointer;
+    }
+
+    .workflow-toggle {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--black);
+      transition: transform 150ms ease-out;
+    }
+
+    .workflow-diagram.expanded .workflow-toggle {
+      transform: rotate(90deg);
+    }
+
+    .workflow-title {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-weight: 300;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--grey-medium);
+    }
+
+    .workflow-content {
+      display: none;
+    }
+
+    .workflow-diagram.expanded .workflow-content {
+      display: block;
+    }
+
+    .workflow-canvas {
+      position: relative;
+      min-height: 200px;
+    }
+
+    .workflow-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .workflow-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .workflow-node {
+      background: var(--white);
+      border: 2px solid var(--black);
+      border-radius: 8px;
+      padding: 12px 16px;
+      min-width: 120px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 150ms ease-out;
+      position: relative;
+      z-index: 1;
+    }
+
+    .workflow-node:hover {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .workflow-node.start {
+      background: var(--black);
+      color: var(--white);
+      border-radius: 9999px;
+      min-width: 80px;
+    }
+
+    .workflow-node.start:hover {
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+
+    .workflow-node.decision {
+      background: var(--white);
+      border-color: var(--blue);
+      transform: rotate(0deg);
+      border-radius: 4px;
+    }
+
+    .workflow-node.decision::before {
+      content: "";
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-bottom: 6px solid var(--blue);
+    }
+
+    .workflow-node.decision:hover {
+      background: var(--blue);
+      color: var(--white);
+    }
+
+    .workflow-node.end {
+      background: var(--mint);
+      border-color: var(--mint);
+      border-radius: 9999px;
+    }
+
+    .workflow-node.end:hover {
+      background: var(--black);
+      border-color: var(--black);
+      color: var(--white);
+    }
+
+    .workflow-node.link-target {
+      border-style: dashed;
+      border-color: var(--grey-medium);
+    }
+
+    .workflow-node-label {
+      font-size: 14px;
+      font-weight: 400;
+    }
+
+    .workflow-arrow {
+      display: flex;
+      align-items: center;
+      color: var(--grey-medium);
+      flex-shrink: 0;
+    }
+
+    .workflow-arrow .icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .workflow-arrow-label {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--grey-medium);
+      position: absolute;
+      top: -16px;
+      white-space: nowrap;
+    }
+
+    .workflow-branch {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      padding-left: 32px;
+      border-left: 2px dashed var(--grey-medium);
+      margin-left: 16px;
+    }
+
+    .workflow-branch-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .workflow-branch-label {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      color: var(--blue);
+      padding: 2px 8px;
+      background: rgba(57, 65, 235, 0.1);
+      border-radius: 4px;
+      margin-right: 8px;
+    }
+
+    /* Node Detail Modal */
+    .node-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .node-modal.active {
+      display: flex;
+    }
+
+    .node-modal-content {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .node-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--grey-light);
+    }
+
+    .node-modal-title {
+      font-size: 23px;
+    }
+
+    .node-modal-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--grey-medium);
+      transition: color 150ms ease-out;
+    }
+
+    .node-modal-close:hover {
+      color: var(--black);
+    }
+
+    .node-modal-type {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--grey-medium);
+      margin-bottom: 16px;
+    }
+
+    .node-modal-details {
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--black);
+    }
+
+    .node-modal-details p {
+      margin-bottom: 12px;
+    }
+
+    .node-modal-details ul {
+      margin-left: 20px;
+      margin-bottom: 12px;
+    }
+
+    .node-modal-details li {
+      margin-bottom: 6px;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       h1 {
@@ -931,6 +1204,20 @@
   </style>
 </head>
 <body>
+  <!-- Node Detail Modal -->
+  <div id="nodeModal" class="node-modal" onclick="closeNodeModal(event)">
+    <div class="node-modal-content" onclick="event.stopPropagation()">
+      <div class="node-modal-header">
+        <h4 class="node-modal-title" id="nodeModalTitle"></h4>
+        <button class="node-modal-close" onclick="closeNodeModal()">
+          <i data-lucide="x" class="icon"></i>
+        </button>
+      </div>
+      <div class="node-modal-type" id="nodeModalType"></div>
+      <div class="node-modal-details" id="nodeModalDetails"></div>
+    </div>
+  </div>
+
   <div class="container">
     <h1>AI Pipelines<span class="underscore">_</span></h1>
 
@@ -1150,6 +1437,8 @@
             </div>
           ` : ''}
 
+          ${renderDiagram(client)}
+
           <div class="sections">
             ${sections.map(section => renderSection(section)).join('')}
             ${sections.length === 0 ? '<p style="color: var(--grey-medium);">No requirement sections added yet.</p>' : ''}
@@ -1298,6 +1587,7 @@
       const expandedSections = new Set();
       const expandedRequirements = new Set();
       const expandedClientData = new Set();
+      const expandedDiagrams = new Set();
 
       document.querySelectorAll('.section.expanded').forEach(el => {
         expandedSections.add(el.dataset.id);
@@ -1307,6 +1597,9 @@
       });
       document.querySelectorAll('.client-data.expanded').forEach(el => {
         expandedClientData.add(el.dataset.id);
+      });
+      document.querySelectorAll('.workflow-diagram.expanded').forEach(el => {
+        expandedDiagrams.add(el.dataset.id);
       });
 
       updateFn(allData);
@@ -1323,6 +1616,10 @@
       });
       expandedClientData.forEach(id => {
         const el = document.querySelector(`.client-data[data-id="${id}"]`);
+        if (el) el.classList.add('expanded');
+      });
+      expandedDiagrams.forEach(id => {
+        const el = document.querySelector(`.workflow-diagram[data-id="${id}"]`);
         if (el) el.classList.add('expanded');
       });
 
@@ -1508,6 +1805,129 @@
         console.error('Error removing signoff:', error);
       }
     }
+
+    // Diagram rendering
+    function renderDiagram(client) {
+      const diagram = client.diagram;
+      if (!diagram || !diagram.data) {
+        return '';
+      }
+
+      let diagramData;
+      try {
+        diagramData = typeof diagram.data === 'string' ? JSON.parse(diagram.data) : diagram.data;
+      } catch (e) {
+        console.error('Error parsing diagram data:', e);
+        return '';
+      }
+
+      if (!diagramData.rows || diagramData.rows.length === 0) {
+        return '';
+      }
+
+      return `
+        <div class="workflow-diagram expanded" data-id="diagram-${client.id}">
+          <div class="workflow-header" onclick="toggleDiagram('diagram-${client.id}')">
+            <div class="workflow-toggle">
+              <i data-lucide="chevron-right" class="icon"></i>
+            </div>
+            <span class="workflow-title">Workflow Diagram</span>
+          </div>
+          <div class="workflow-content">
+            <div class="workflow-canvas">
+              ${diagramData.rows.map(row => renderDiagramRow(row)).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDiagramRow(row) {
+      const nodes = row.nodes || [];
+
+      return `
+        <div class="workflow-row">
+          ${nodes.map((node, index) => {
+            const isLast = index === nodes.length - 1;
+            let html = renderDiagramNode(node);
+
+            // Add arrow after node (except for last node, unless it has branches)
+            if (!isLast && !node.branches) {
+              html += `<div class="workflow-arrow"><i data-lucide="arrow-right" class="icon"></i></div>`;
+            }
+
+            // Handle branches (for decision nodes)
+            if (node.branches) {
+              html += renderBranches(node.branches);
+            }
+
+            return html;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderDiagramNode(node) {
+      const typeClass = node.type || 'process';
+      const nodeData = JSON.stringify(node).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+      return `
+        <div class="workflow-node ${typeClass}" onclick="showNodeDetails(${nodeData})">
+          <span class="workflow-node-label">${node.label}</span>
+        </div>
+      `;
+    }
+
+    function renderBranches(branches) {
+      return `
+        <div class="workflow-branch">
+          ${branches.map(branch => `
+            <div class="workflow-branch-row">
+              <span class="workflow-branch-label">${branch.label}</span>
+              <div class="workflow-arrow"><i data-lucide="arrow-right" class="icon"></i></div>
+              ${branch.nodes.map((node, idx) => {
+                let html = renderDiagramNode(node);
+                if (idx < branch.nodes.length - 1) {
+                  html += `<div class="workflow-arrow"><i data-lucide="arrow-right" class="icon"></i></div>`;
+                }
+                return html;
+              }).join('')}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function toggleDiagram(id) {
+      const el = document.querySelector(`.workflow-diagram[data-id="${id}"]`);
+      el.classList.toggle('expanded');
+      lucide.createIcons();
+    }
+
+    // Node detail modal
+    function showNodeDetails(node) {
+      event.stopPropagation();
+
+      document.getElementById('nodeModalTitle').textContent = node.label;
+      document.getElementById('nodeModalType').textContent = node.type || 'Process';
+      document.getElementById('nodeModalDetails').innerHTML = node.details || '<p style="color: var(--grey-medium);">No details available for this node.</p>';
+
+      document.getElementById('nodeModal').classList.add('active');
+      lucide.createIcons();
+    }
+
+    function closeNodeModal(event) {
+      if (!event || event.target === document.getElementById('nodeModal')) {
+        document.getElementById('nodeModal').classList.remove('active');
+      }
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeNodeModal();
+      }
+    });
 
     lucide.createIcons();
   </script>
