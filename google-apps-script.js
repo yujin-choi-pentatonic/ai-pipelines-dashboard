@@ -2,13 +2,16 @@
  * AI Pipelines Dashboard - Google Apps Script
  *
  * SHEET STRUCTURE:
- * 1. Pipelines: id, name
- * 2. Clients: id, pipelineId, name
- * 3. ClientData: id, clientId, item
- * 4. Sections: id, clientId, name, sortOrder
- * 5. Requirements: id, sectionId, name, subname, priority, status, sortOrder
- * 6. Bullets: id, requirementId, text, sortOrder
- * 7. Technologies: id, requirementId, name, type, stage, progress, links
+ * 1. Categories: id, name, sortOrder
+ * 2. Pipelines: id, categoryId, name, sortOrder
+ * 3. Clients: id, pipelineId, name
+ * 4. ClientData: id, clientId, item
+ * 5. Sections: id, clientId, name, sortOrder
+ * 6. Requirements: id, sectionId, name, subname, priority, status, sortOrder
+ * 7. Bullets: id, requirementId, text, sortOrder
+ * 8. Technologies: id, requirementId, name, type, stage, progress, links
+ * 9. Signoffs: id, requirementId, personName, signedAt
+ * 10. Diagrams: id, clientId, data (JSON)
  */
 
 function doGet(e) {
@@ -41,6 +44,12 @@ function doPost(e) {
       output = updateRequirementStatus(data.id, data.status);
     } else if (action === 'updateTechnologyProgress') {
       output = updateTechnologyProgress(data.id, data.progress);
+    } else if (action === 'addSignoff') {
+      output = addSignoff(data.requirementId, data.personName);
+    } else if (action === 'removeSignoff') {
+      output = removeSignoff(data.id);
+    } else if (action === 'saveDiagram') {
+      output = saveDiagram(data.clientId, data.diagramData);
     } else {
       output = ContentService.createTextOutput(JSON.stringify({ error: 'Invalid action' }));
     }
@@ -55,6 +64,7 @@ function doPost(e) {
 function getData() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
+  const categories = sheetToObjects(ss.getSheetByName('Categories'));
   const pipelines = sheetToObjects(ss.getSheetByName('Pipelines'));
   const clients = sheetToObjects(ss.getSheetByName('Clients'));
   const clientData = sheetToObjects(ss.getSheetByName('ClientData'));
@@ -62,35 +72,45 @@ function getData() {
   const requirements = sheetToObjects(ss.getSheetByName('Requirements'));
   const bullets = sheetToObjects(ss.getSheetByName('Bullets'));
   const technologies = sheetToObjects(ss.getSheetByName('Technologies'));
+  const signoffs = sheetToObjects(ss.getSheetByName('Signoffs'));
+  const diagrams = sheetToObjects(ss.getSheetByName('Diagrams'));
 
   // Sort helper
   const bySort = (a, b) => (a.sortOrder || 0) - (b.sortOrder || 0);
 
-  // Nest bullets under requirements
-  const requirementsWithBullets = requirements.map(req => ({
+  // Nest signoffs under requirements
+  const requirementsWithData = requirements.map(req => ({
     ...req,
     bullets: bullets.filter(b => b.requirementId === req.id).sort(bySort),
-    technologies: technologies.filter(t => t.requirementId === req.id)
+    technologies: technologies.filter(t => t.requirementId === req.id),
+    signoffs: signoffs.filter(s => s.requirementId === req.id)
   })).sort(bySort);
 
   // Nest requirements under sections
   const sectionsWithReqs = sections.map(sec => ({
     ...sec,
-    requirements: requirementsWithBullets.filter(r => r.sectionId === sec.id)
+    requirements: requirementsWithData.filter(r => r.sectionId === sec.id)
   })).sort(bySort);
 
-  // Nest sections and clientData under clients
+  // Nest sections, clientData, and diagrams under clients
   const clientsWithData = clients.map(client => ({
     ...client,
     data: clientData.filter(d => d.clientId === client.id),
-    sections: sectionsWithReqs.filter(s => s.clientId === client.id)
+    sections: sectionsWithReqs.filter(s => s.clientId === client.id),
+    diagram: diagrams.find(d => d.clientId === client.id) || null
   }));
 
   // Nest clients under pipelines
-  const result = pipelines.map(pipeline => ({
+  const pipelinesWithClients = pipelines.map(pipeline => ({
     ...pipeline,
     clients: clientsWithData.filter(c => c.pipelineId === pipeline.id)
-  }));
+  })).sort(bySort);
+
+  // Nest pipelines under categories
+  const result = categories.map(category => ({
+    ...category,
+    pipelines: pipelinesWithClients.filter(p => p.categoryId === category.id)
+  })).sort(bySort);
 
   return ContentService.createTextOutput(JSON.stringify({ success: true, data: result }));
 }
@@ -129,6 +149,56 @@ function updateTechnologyProgress(id, progress) {
   return ContentService.createTextOutput(JSON.stringify({ success: true }));
 }
 
+function addSignoff(requirementId, personName) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Signoffs');
+  const id = 'signoff-' + new Date().getTime();
+  const signedAt = new Date().toISOString();
+
+  sheet.appendRow([id, requirementId, personName, signedAt]);
+
+  return ContentService.createTextOutput(JSON.stringify({
+    success: true,
+    signoff: { id, requirementId, personName, signedAt }
+  }));
+}
+
+function removeSignoff(id) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Signoffs');
+  const data = sheet.getDataRange().getValues();
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][0] === id) {
+      sheet.deleteRow(i + 1);
+      break;
+    }
+  }
+
+  return ContentService.createTextOutput(JSON.stringify({ success: true }));
+}
+
+function saveDiagram(clientId, diagramData) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Diagrams');
+  const data = sheet.getDataRange().getValues();
+  const diagramJson = JSON.stringify(diagramData);
+
+  // Check if diagram exists for this client
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][1] === clientId) {
+      sheet.getRange(i + 1, 3).setValue(diagramJson);
+      return ContentService.createTextOutput(JSON.stringify({ success: true }));
+    }
+  }
+
+  // Create new diagram entry
+  const id = 'diagram-' + new Date().getTime();
+  sheet.appendRow([id, clientId, diagramJson]);
+
+  return ContentService.createTextOutput(JSON.stringify({ success: true }));
+}
+
 function sheetToObjects(sheet) {
   if (!sheet) return [];
 
@@ -148,12 +218,13 @@ function sheetToObjects(sheet) {
       // Skip empty rows
       if (j === 0 && !value) continue;
 
-      // Parse links column as JSON
-      if (headers[j] === 'links' && typeof value === 'string' && value) {
+      // Parse JSON columns
+      if (['links', 'data'].includes(headers[j]) && typeof value === 'string' && value) {
         try {
           value = JSON.parse(value);
         } catch (e) {
-          value = [];
+          if (headers[j] === 'links') value = [];
+          else value = null;
         }
       }
 

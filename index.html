@@ -85,7 +85,40 @@
       letter-spacing: 0.05em;
     }
 
-    /* Pipeline Tabs */
+    /* Category Tabs (Top Level) */
+    .category-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .category-tab {
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      font-size: 18px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 16px 40px;
+      border: 2px solid var(--black);
+      border-radius: 9999px;
+      background: transparent;
+      color: var(--black);
+      cursor: pointer;
+      transition: all 150ms ease-out;
+    }
+
+    .category-tab:hover {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    .category-tab.active {
+      background: var(--black);
+      color: var(--white);
+    }
+
+    /* Pipeline Tabs (Second Level) */
     .pipeline-tabs {
       display: flex;
       gap: 8px;
@@ -96,11 +129,11 @@
     .pipeline-tab {
       font-family: 'Atkinson Hyperlegible Next', sans-serif;
       font-weight: 300;
-      font-size: 16px;
+      font-size: 14px;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      padding: 12px 32px;
-      border: 1px solid var(--black);
+      padding: 10px 24px;
+      border: 1px solid var(--grey-medium);
       border-radius: 9999px;
       background: transparent;
       color: var(--black);
@@ -109,13 +142,13 @@
     }
 
     .pipeline-tab:hover {
-      background: var(--black);
-      color: var(--white);
+      border-color: var(--black);
     }
 
     .pipeline-tab.active {
-      background: var(--black);
-      color: var(--white);
+      background: var(--grey-medium);
+      border-color: var(--grey-medium);
+      color: var(--black);
     }
 
     /* Pipeline Header */
@@ -331,7 +364,7 @@
       display: block;
     }
 
-    /* Requirements/Tiers */
+    /* Requirements */
     .requirement {
       border: 1px solid var(--grey-light);
       border-radius: 8px;
@@ -452,6 +485,102 @@
 
     .requirement.expanded .requirement-details {
       display: block;
+    }
+
+    /* Signoffs */
+    .signoffs {
+      margin-bottom: 16px;
+      padding: 12px;
+      background: var(--white);
+      border-radius: 8px;
+    }
+
+    .signoffs-header {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-weight: 300;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--grey-medium);
+      margin-bottom: 8px;
+    }
+
+    .signoff-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .signoff-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: var(--mint);
+      border-radius: 9999px;
+      font-size: 14px;
+    }
+
+    .signoff-item .icon {
+      width: 14px;
+      height: 14px;
+    }
+
+    .signoff-remove {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.6;
+      transition: opacity 150ms ease-out;
+    }
+
+    .signoff-remove:hover {
+      opacity: 1;
+    }
+
+    .signoff-add {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .signoff-input {
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-size: 14px;
+      padding: 6px 12px;
+      border: 1px solid var(--grey-medium);
+      border-radius: 8px;
+      width: 150px;
+    }
+
+    .signoff-input:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
+
+    .signoff-btn {
+      font-family: 'Atkinson Hyperlegible Next', sans-serif;
+      font-weight: 300;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 6px 16px;
+      border: 1px solid var(--black);
+      border-radius: 9999px;
+      background: transparent;
+      color: var(--black);
+      cursor: pointer;
+      transition: all 150ms ease-out;
+    }
+
+    .signoff-btn:hover {
+      background: var(--black);
+      color: var(--white);
     }
 
     /* Bullet Points */
@@ -768,13 +897,18 @@
         width: 100%;
       }
 
-      .pipeline-tabs {
+      .category-tabs, .pipeline-tabs {
         gap: 8px;
+      }
+
+      .category-tab {
+        padding: 12px 24px;
+        font-size: 14px;
       }
 
       .pipeline-tab {
         padding: 8px 16px;
-        font-size: 14px;
+        font-size: 12px;
       }
 
       .pipeline-stats {
@@ -816,6 +950,7 @@
       <span id="lastUpdated" class="last-updated"></span>
     </div>
 
+    <div id="categoryTabs" class="category-tabs"></div>
     <div id="pipelineTabs" class="pipeline-tabs"></div>
 
     <div id="dashboard">
@@ -826,6 +961,7 @@
   <script>
     let API_URL = localStorage.getItem('pipelineApiUrl') || 'https://script.google.com/macros/s/AKfycbxFlCrP50I-WM4i7dOfuIcLLFmSoPXCqVNtaIlQCo3Nl3ia8wBwj_YumupHBAS80HOt7Q/exec';
     let allData = [];
+    let activeCategoryId = null;
     let activePipelineId = null;
 
     if (API_URL) {
@@ -848,6 +984,7 @@
     async function loadData() {
       try {
         document.getElementById('dashboard').innerHTML = '<div class="loading">Loading pipeline data...</div>';
+        document.getElementById('categoryTabs').innerHTML = '';
         document.getElementById('pipelineTabs').innerHTML = '';
 
         const response = await fetch(`${API_URL}?action=getData`);
@@ -855,12 +992,13 @@
 
         if (result.success) {
           allData = result.data;
-          renderPipelineTabs(allData);
 
-          if (allData.length > 0 && !activePipelineId) {
-            activePipelineId = allData[0].id;
+          if (allData.length > 0 && !activeCategoryId) {
+            activeCategoryId = allData[0].id;
           }
 
+          renderCategoryTabs(allData);
+          renderPipelineTabs();
           renderDashboard();
           document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
         } else {
@@ -874,15 +1012,47 @@
       lucide.createIcons();
     }
 
-    function renderPipelineTabs(pipelines) {
-      const tabsContainer = document.getElementById('pipelineTabs');
+    function renderCategoryTabs(categories) {
+      const tabsContainer = document.getElementById('categoryTabs');
 
-      if (!pipelines || pipelines.length === 0) {
+      if (!categories || categories.length === 0) {
         tabsContainer.innerHTML = '';
         return;
       }
 
-      tabsContainer.innerHTML = pipelines.map(pipeline => `
+      tabsContainer.innerHTML = categories.map(cat => `
+        <button class="category-tab ${cat.id === activeCategoryId ? 'active' : ''}"
+                onclick="selectCategory('${cat.id}')">
+          ${cat.name}
+        </button>
+      `).join('');
+    }
+
+    function selectCategory(categoryId) {
+      activeCategoryId = categoryId;
+      activePipelineId = null;
+
+      document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+
+      renderPipelineTabs();
+      renderDashboard();
+    }
+
+    function renderPipelineTabs() {
+      const tabsContainer = document.getElementById('pipelineTabs');
+      const category = allData.find(c => c.id === activeCategoryId);
+
+      if (!category || !category.pipelines || category.pipelines.length === 0) {
+        tabsContainer.innerHTML = '';
+        return;
+      }
+
+      if (!activePipelineId) {
+        activePipelineId = category.pipelines[0].id;
+      }
+
+      tabsContainer.innerHTML = category.pipelines.map(pipeline => `
         <button class="pipeline-tab ${pipeline.id === activePipelineId ? 'active' : ''}"
                 onclick="selectPipeline('${pipeline.id}')">
           ${pipeline.name}
@@ -893,9 +1063,7 @@
     function selectPipeline(pipelineId) {
       activePipelineId = pipelineId;
 
-      document.querySelectorAll('.pipeline-tab').forEach(tab => {
-        tab.classList.remove('active');
-      });
+      document.querySelectorAll('.pipeline-tab').forEach(tab => tab.classList.remove('active'));
       event.target.classList.add('active');
 
       renderDashboard();
@@ -903,10 +1071,17 @@
 
     function renderDashboard() {
       const dashboard = document.getElementById('dashboard');
-      const pipeline = allData.find(p => p.id === activePipelineId);
+      const category = allData.find(c => c.id === activeCategoryId);
+
+      if (!category) {
+        dashboard.innerHTML = '<p class="empty-state">No data found. Add Categories to your Google Sheet.</p>';
+        return;
+      }
+
+      const pipeline = category.pipelines?.find(p => p.id === activePipelineId);
 
       if (!pipeline) {
-        dashboard.innerHTML = '<p class="empty-state">No pipeline data found. Add some data to your Google Sheet.</p>';
+        dashboard.innerHTML = '<p class="empty-state">No pipelines in this category. Add Pipelines to your Google Sheet.</p>';
         return;
       }
 
@@ -1009,6 +1184,7 @@
       const isComplete = req.status === 'Complete';
       const bullets = req.bullets || [];
       const technologies = req.technologies || [];
+      const signoffs = req.signoffs || [];
 
       return `
         <div class="requirement" data-id="${req.id}">
@@ -1029,6 +1205,25 @@
             </div>
           </div>
           <div class="requirement-details">
+            <div class="signoffs">
+              <div class="signoffs-header">Sign-offs</div>
+              <div class="signoff-list" id="signoffs-${req.id}">
+                ${signoffs.map(s => `
+                  <div class="signoff-item" data-id="${s.id}">
+                    <i data-lucide="check" class="icon"></i>
+                    ${s.personName}
+                    <button class="signoff-remove" onclick="removeSignoff('${s.id}', '${req.id}')" title="Remove">
+                      <i data-lucide="x" class="icon"></i>
+                    </button>
+                  </div>
+                `).join('')}
+                ${signoffs.length === 0 ? '<span style="color: var(--grey-medium); font-size: 14px;">No sign-offs yet</span>' : ''}
+              </div>
+              <div class="signoff-add">
+                <input type="text" class="signoff-input" id="signoff-input-${req.id}" placeholder="Name" onkeypress="handleSignoffKeypress(event, '${req.id}')">
+                <button class="signoff-btn" onclick="addSignoff('${req.id}')">Add</button>
+              </div>
+            </div>
             ${bullets.length > 0 ? `
               <div class="bullets">
                 ${bullets.map(b => `<div class="bullet">${b.text}</div>`).join('')}
@@ -1038,7 +1233,6 @@
               <div class="technologies-header">Technologies</div>
               ${technologies.map(tech => renderTechnology(tech)).join('')}
             ` : ''}
-            ${bullets.length === 0 && technologies.length === 0 ? '<p style="color: var(--grey-medium); font-size: 14px;">No details added yet.</p>' : ''}
           </div>
         </div>
       `;
@@ -1098,7 +1292,31 @@
       lucide.createIcons();
     }
 
+    // Optimistic update helper
+    function updateLocalData(updateFn) {
+      updateFn(allData);
+      renderDashboard();
+    }
+
     async function toggleStatus(id, newStatus) {
+      // Optimistic update
+      updateLocalData(data => {
+        for (const cat of data) {
+          for (const pipeline of cat.pipelines || []) {
+            for (const client of pipeline.clients || []) {
+              for (const section of client.sections || []) {
+                const req = section.requirements?.find(r => r.id === id);
+                if (req) {
+                  req.status = newStatus;
+                  return;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Sync to server in background
       try {
         await fetch(API_URL, {
           method: 'POST',
@@ -1108,7 +1326,6 @@
             status: newStatus
           })
         });
-        loadData();
       } catch (error) {
         console.error('Error updating status:', error);
       }
@@ -1116,6 +1333,27 @@
 
     async function updateProgress(id, progress) {
       const value = Math.min(100, Math.max(0, parseInt(progress) || 0));
+
+      // Optimistic update
+      updateLocalData(data => {
+        for (const cat of data) {
+          for (const pipeline of cat.pipelines || []) {
+            for (const client of pipeline.clients || []) {
+              for (const section of client.sections || []) {
+                for (const req of section.requirements || []) {
+                  const tech = req.technologies?.find(t => t.id === id);
+                  if (tech) {
+                    tech.progress = value;
+                    return;
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Sync to server in background
       try {
         await fetch(API_URL, {
           method: 'POST',
@@ -1125,7 +1363,6 @@
             progress: value
           })
         });
-        loadData();
       } catch (error) {
         console.error('Error updating progress:', error);
       }
@@ -1137,6 +1374,108 @@
       const width = rect.width;
       const progress = Math.round((x / width) * 100);
       updateProgress(id, progress);
+    }
+
+    function handleSignoffKeypress(event, reqId) {
+      if (event.key === 'Enter') {
+        addSignoff(reqId);
+      }
+    }
+
+    async function addSignoff(reqId) {
+      const input = document.getElementById(`signoff-input-${reqId}`);
+      const personName = input.value.trim();
+      if (!personName) return;
+
+      const tempId = 'temp-' + Date.now();
+      const signedAt = new Date().toISOString();
+
+      // Optimistic update
+      updateLocalData(data => {
+        for (const cat of data) {
+          for (const pipeline of cat.pipelines || []) {
+            for (const client of pipeline.clients || []) {
+              for (const section of client.sections || []) {
+                const req = section.requirements?.find(r => r.id === reqId);
+                if (req) {
+                  if (!req.signoffs) req.signoffs = [];
+                  req.signoffs.push({ id: tempId, requirementId: reqId, personName, signedAt });
+                  return;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      input.value = '';
+
+      // Sync to server in background
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'addSignoff',
+            requirementId: reqId,
+            personName: personName
+          })
+        });
+        const result = await response.json();
+
+        // Update with real ID
+        if (result.success && result.signoff) {
+          updateLocalData(data => {
+            for (const cat of data) {
+              for (const pipeline of cat.pipelines || []) {
+                for (const client of pipeline.clients || []) {
+                  for (const section of client.sections || []) {
+                    const req = section.requirements?.find(r => r.id === reqId);
+                    if (req) {
+                      const signoff = req.signoffs?.find(s => s.id === tempId);
+                      if (signoff) signoff.id = result.signoff.id;
+                      return;
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Error adding signoff:', error);
+      }
+    }
+
+    async function removeSignoff(signoffId, reqId) {
+      // Optimistic update
+      updateLocalData(data => {
+        for (const cat of data) {
+          for (const pipeline of cat.pipelines || []) {
+            for (const client of pipeline.clients || []) {
+              for (const section of client.sections || []) {
+                const req = section.requirements?.find(r => r.id === reqId);
+                if (req && req.signoffs) {
+                  req.signoffs = req.signoffs.filter(s => s.id !== signoffId);
+                  return;
+                }
+              }
+            }
+          }
+        }
+      });
+
+      // Sync to server in background
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'removeSignoff',
+            id: signoffId
+          })
+        });
+      } catch (error) {
+        console.error('Error removing signoff:', error);
+      }
     }
 
     lucide.createIcons();
