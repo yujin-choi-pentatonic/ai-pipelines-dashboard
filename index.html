@@ -607,6 +607,73 @@
       flex-shrink: 0;
     }
 
+    .bullet-image {
+      padding: 8px 0;
+    }
+
+    .bullet-image img {
+      max-width: 100%;
+      max-height: 300px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 150ms ease-out;
+      border: 1px solid var(--grey-light);
+    }
+
+    .bullet-image img:hover {
+      opacity: 0.9;
+    }
+
+    /* Image Modal */
+    .image-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 1200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .image-modal-content {
+      position: relative;
+      max-width: 90vw;
+      max-height: 90vh;
+    }
+
+    .image-modal-content img {
+      max-width: 100%;
+      max-height: 90vh;
+      border-radius: 8px;
+    }
+
+    .image-modal-close {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      background: none;
+      border: none;
+      color: var(--white);
+      cursor: pointer;
+      padding: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .image-modal-close:hover {
+      color: var(--mint);
+    }
+
+    .image-modal-close .icon {
+      width: 24px;
+      height: 24px;
+    }
+
     /* Technologies */
     .technologies-header {
       font-family: 'Atkinson Hyperlegible Mono', monospace;
@@ -1641,7 +1708,7 @@
             </div>
             ${bullets.length > 0 ? `
               <div class="bullets">
-                ${bullets.map(b => `<div class="bullet">${b.text}</div>`).join('')}
+                ${bullets.map(b => renderBullet(b.text)).join('')}
               </div>
             ` : ''}
             ${technologies.length > 0 ? `
@@ -1651,6 +1718,42 @@
           </div>
         </div>
       `;
+    }
+
+    function renderBullet(text) {
+      // Check if the text is an image URL
+      const imagePattern = /\.(png|jpg|jpeg|gif|webp|svg)(\?.*)?$/i;
+      const isGoogleDrive = text.includes('drive.google.com') || text.includes('lh3.googleusercontent.com');
+
+      if (imagePattern.test(text) || isGoogleDrive) {
+        // Convert Google Drive sharing link to direct image link if needed
+        let imageUrl = text;
+        if (text.includes('drive.google.com/file/d/')) {
+          const fileId = text.match(/\/d\/([a-zA-Z0-9_-]+)/)?.[1];
+          if (fileId) {
+            imageUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+          }
+        }
+        return `<div class="bullet-image"><img src="${imageUrl}" alt="Bullet image" onclick="openImageModal('${imageUrl}')"></div>`;
+      }
+
+      return `<div class="bullet">${text}</div>`;
+    }
+
+    function openImageModal(imageUrl) {
+      const modal = document.createElement('div');
+      modal.className = 'image-modal';
+      modal.onclick = () => modal.remove();
+      modal.innerHTML = `
+        <div class="image-modal-content" onclick="event.stopPropagation()">
+          <img src="${imageUrl}" alt="Full size image">
+          <button class="image-modal-close" onclick="this.parentElement.parentElement.remove()">
+            <i data-lucide="x" class="icon"></i>
+          </button>
+        </div>
+      `;
+      document.body.appendChild(modal);
+      lucide.createIcons();
     }
 
     function renderTechnology(tech) {
