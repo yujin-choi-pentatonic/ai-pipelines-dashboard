@@ -1375,6 +1375,7 @@
     let allData = [];
     let activeCategoryId = null;
     let activePipelineId = null;
+    let diagramDataStore = {};
 
     if (API_URL) {
       document.getElementById('configBanner').classList.add('hidden');
@@ -1942,24 +1943,31 @@
         return '';
       }
 
-      // Store diagram data for modal
-      const diagramJson = JSON.stringify(diagramData).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      // Store diagram data for modal access
+      diagramDataStore[client.id] = {
+        name: client.name,
+        data: diagramData
+      };
 
       return `
-        <button class="view-diagram-btn" onclick="openDiagramModal('${client.name}', '${diagramJson}')">
+        <button class="view-diagram-btn" onclick="openDiagramModal('${client.id}')">
           <i data-lucide="git-branch" class="icon"></i>
           View Workflow Diagram
         </button>
       `;
     }
 
-    function openDiagramModal(clientName, diagramJson) {
-      const diagramData = JSON.parse(diagramJson.replace(/&quot;/g, '"'));
+    function openDiagramModal(clientId) {
+      const stored = diagramDataStore[clientId];
+      if (!stored) {
+        console.error('No diagram data found for client:', clientId);
+        return;
+      }
 
-      document.getElementById('diagramModalTitle').textContent = clientName + ' - Workflow Diagram';
+      document.getElementById('diagramModalTitle').textContent = stored.name + ' - Workflow Diagram';
       document.getElementById('diagramModalContent').innerHTML = `
         <div class="workflow-canvas">
-          ${diagramData.rows.map(row => renderDiagramRow(row)).join('')}
+          ${stored.data.rows.map(row => renderDiagramRow(row)).join('')}
         </div>
       `;
 
