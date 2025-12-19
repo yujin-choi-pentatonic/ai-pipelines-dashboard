@@ -779,6 +779,24 @@
       text-align: right;
     }
 
+    /* Technology Image */
+    .technology-image {
+      margin-top: 12px;
+    }
+
+    .technology-image img {
+      max-width: 100%;
+      max-height: 250px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 150ms ease-out;
+      border: 1px solid var(--grey-light);
+    }
+
+    .technology-image img:hover {
+      opacity: 0.9;
+    }
+
     /* Links */
     .technology-links {
       display: flex;
@@ -1759,6 +1777,7 @@
     function renderTechnology(tech) {
       const stageClass = tech.stage?.toLowerCase() || '';
       const links = tech.links || [];
+      const imageUrl = getTechnologyImageUrl(tech.image);
 
       return `
         <div class="technology" data-id="${tech.id}">
@@ -1778,6 +1797,11 @@
               <span class="progress-value">%</span>
             </div>
           </div>
+          ${imageUrl ? `
+            <div class="technology-image">
+              <img src="${imageUrl}" alt="${tech.name}" onclick="openImageModal('${imageUrl}')">
+            </div>
+          ` : ''}
           ${links.length > 0 ? `
             <div class="technology-links">
               ${links.map(link => `
@@ -1790,6 +1814,20 @@
           ` : ''}
         </div>
       `;
+    }
+
+    function getTechnologyImageUrl(image) {
+      if (!image) return null;
+
+      // Convert Google Drive sharing link to direct image link
+      if (image.includes('drive.google.com/file/d/')) {
+        const fileId = image.match(/\/d\/([a-zA-Z0-9_-]+)/)?.[1];
+        if (fileId) {
+          return `https://lh3.googleusercontent.com/d/${fileId}`;
+        }
+      }
+
+      return image;
     }
 
     function toggleClientData(id) {
