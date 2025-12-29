@@ -1740,12 +1740,15 @@
             ` : ''}
             ${linkUrls.length > 0 ? `
               <div class="section-links">
-                ${linkUrls.map(url => `
-                  <a href="${url}" target="_blank" class="file-link">
-                    <i data-lucide="${getFileIcon(url)}" class="icon"></i>
-                    ${getFileNameFromUrl(url)}
-                  </a>
-                `).join('')}
+                ${linkUrls.map(link => {
+                  const { url, label } = parseLinkWithLabel(link);
+                  return `
+                    <a href="${url}" target="_blank" class="file-link">
+                      <i data-lucide="${getFileIcon(url)}" class="icon"></i>
+                      ${label}
+                    </a>
+                  `;
+                }).join('')}
               </div>
             ` : ''}
             ${requirements.map(req => renderRequirement(req)).join('')}
@@ -1793,6 +1796,21 @@
       }
 
       return [];
+    }
+
+    function parseLinkWithLabel(link) {
+      // Format: URL|Label or just URL
+      if (link.includes('|')) {
+        const parts = link.split('|');
+        return {
+          url: parts[0].trim(),
+          label: parts[1].trim()
+        };
+      }
+      return {
+        url: link,
+        label: getFileNameFromUrl(link)
+      };
     }
 
     function renderRequirement(req) {
