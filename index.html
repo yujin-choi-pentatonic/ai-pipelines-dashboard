@@ -757,11 +757,14 @@
       align-items: center;
       justify-content: space-between;
       margin-bottom: 12px;
+      gap: 16px;
     }
 
     .technology-name {
       font-size: 16px;
       font-weight: 400;
+      flex: 1;
+      min-width: 0;
     }
 
     .technology-type {
@@ -771,6 +774,7 @@
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--grey-medium);
+      flex-shrink: 0;
     }
 
     .technology-details {
