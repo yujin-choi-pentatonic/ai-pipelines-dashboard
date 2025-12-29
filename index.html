@@ -1702,8 +1702,7 @@
         <div class="client-card">
           <div class="client-header">
             <div class="client-identity">
-              ${logoUrl ? `<img src="${logoUrl}" alt="${client.name}" class="client-logo">` : ''}
-              <h3 class="client-name">${client.name}</h3>
+              ${logoUrl ? `<img src="${logoUrl}" alt="${client.name}" class="client-logo">` : `<h3 class="client-name">${client.name}</h3>`}
             </div>
             <div class="client-stats">
               <div class="stat">
