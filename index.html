@@ -206,6 +206,19 @@
       border-bottom: 1px solid var(--grey-light);
     }
 
+    .client-identity {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .client-logo {
+      height: 48px;
+      width: auto;
+      max-width: 120px;
+      object-fit: contain;
+    }
+
     .client-name {
       font-size: 29px;
     }
@@ -1683,11 +1696,15 @@
       const completedReqs = sections.reduce((sum, sec) =>
         sum + (sec.requirements?.filter(r => r.status === 'Complete').length || 0), 0);
       const clientData = client.data || [];
+      const logoUrl = client.logo ? convertGoogleDriveUrl(client.logo) : null;
 
       return `
         <div class="client-card">
           <div class="client-header">
-            <h3 class="client-name">${client.name}</h3>
+            <div class="client-identity">
+              ${logoUrl ? `<img src="${logoUrl}" alt="${client.name}" class="client-logo">` : ''}
+              <h3 class="client-name">${client.name}</h3>
+            </div>
             <div class="client-stats">
               <div class="stat">
                 <div class="stat-value positive">${completedReqs}/${totalReqs}</div>
