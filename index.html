@@ -384,6 +384,13 @@
       opacity: 0.9;
     }
 
+    .section-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
     /* Requirements */
     .requirement {
       border: 1px solid var(--grey-light);
@@ -1714,6 +1721,7 @@
       const requirements = section.requirements || [];
       const completedReqs = requirements.filter(r => r.status === 'Complete').length;
       const imageUrls = getImageUrls(section.image);
+      const linkUrls = section.links ? section.links.split(',').map(l => l.trim()).filter(l => l) : [];
 
       return `
         <div class="section expanded" data-id="${section.id}">
@@ -1728,6 +1736,16 @@
             ${imageUrls.length > 0 ? `
               <div class="section-images">
                 ${imageUrls.map(url => `<img src="${url}" alt="${section.name}" onclick="openImageModal('${url}')">`).join('')}
+              </div>
+            ` : ''}
+            ${linkUrls.length > 0 ? `
+              <div class="section-links">
+                ${linkUrls.map(url => `
+                  <a href="${url}" target="_blank" class="file-link">
+                    <i data-lucide="${getFileIcon(url)}" class="icon"></i>
+                    ${getFileNameFromUrl(url)}
+                  </a>
+                `).join('')}
               </div>
             ` : ''}
             ${requirements.map(req => renderRequirement(req)).join('')}
