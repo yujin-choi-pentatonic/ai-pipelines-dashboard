@@ -1721,7 +1721,7 @@
       const requirements = section.requirements || [];
       const completedReqs = requirements.filter(r => r.status === 'Complete').length;
       const imageUrls = getImageUrls(section.image);
-      const linkUrls = getLinksArray(section.links);
+      const linkUrls = getLinksArray(section.fileLinks);
 
       return `
         <div class="section expanded" data-id="${section.id}">
