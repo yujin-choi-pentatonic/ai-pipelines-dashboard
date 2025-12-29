@@ -644,6 +644,35 @@
       opacity: 0.9;
     }
 
+    .bullet-link {
+      padding: 8px 0;
+    }
+
+    .file-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: var(--white);
+      border: 1px solid var(--grey-medium);
+      border-radius: 8px;
+      color: var(--black);
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 150ms ease-out;
+    }
+
+    .file-link:hover {
+      border-color: var(--blue);
+      color: var(--blue);
+    }
+
+    .file-link .icon {
+      width: 18px;
+      height: 18px;
+      color: var(--blue);
+    }
+
     /* Image Modal */
     .image-modal {
       position: fixed;
@@ -1788,21 +1817,84 @@
     function renderBullet(text) {
       // Check if the text is an image URL
       const imagePattern = /\.(png|jpg|jpeg|gif|webp|svg)(\?.*)?$/i;
-      const isGoogleDrive = text.includes('drive.google.com') || text.includes('lh3.googleusercontent.com');
+      const isGoogleDriveImage = text.includes('lh3.googleusercontent.com');
 
-      if (imagePattern.test(text) || isGoogleDrive) {
-        // Convert Google Drive sharing link to direct image link if needed
-        let imageUrl = text;
-        if (text.includes('drive.google.com/file/d/')) {
+      // Check if it's a Google Drive image link (not a file/document)
+      if (text.includes('drive.google.com/file/d/')) {
+        // Try to determine if it's an image or document
+        const isLikelyImage = imagePattern.test(text) ||
+          text.includes('image') ||
+          (!text.includes('.xlsx') && !text.includes('.xls') && !text.includes('.pdf') && !text.includes('.doc') && !text.includes('.csv'));
+
+        if (isLikelyImage && !text.includes('spreadsheet') && !text.includes('document')) {
           const fileId = text.match(/\/d\/([a-zA-Z0-9_-]+)/)?.[1];
           if (fileId) {
-            imageUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+            const imageUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+            return `<div class="bullet-image"><img src="${imageUrl}" alt="Bullet image" onclick="openImageModal('${imageUrl}')"></div>`;
           }
         }
-        return `<div class="bullet-image"><img src="${imageUrl}" alt="Bullet image" onclick="openImageModal('${imageUrl}')"></div>`;
+      }
+
+      if (imagePattern.test(text) || isGoogleDriveImage) {
+        return `<div class="bullet-image"><img src="${text}" alt="Bullet image" onclick="openImageModal('${text}')"></div>`;
+      }
+
+      // Check if the text is a file link (Excel, PDF, Word, etc.)
+      const filePattern = /\.(xlsx?|csv|pdf|docx?|pptx?|zip|txt)(\?.*)?$/i;
+      const isFileLink = filePattern.test(text) ||
+        text.includes('docs.google.com') ||
+        text.includes('sheets.google.com') ||
+        text.includes('drive.google.com');
+
+      if (isFileLink && (text.startsWith('http://') || text.startsWith('https://'))) {
+        const fileName = getFileNameFromUrl(text);
+        const fileIcon = getFileIcon(text);
+        return `
+          <div class="bullet-link">
+            <a href="${text}" target="_blank" class="file-link">
+              <i data-lucide="${fileIcon}" class="icon"></i>
+              ${fileName}
+            </a>
+          </div>
+        `;
+      }
+
+      // Check if it's any other URL
+      if (text.startsWith('http://') || text.startsWith('https://')) {
+        return `
+          <div class="bullet-link">
+            <a href="${text}" target="_blank" class="file-link">
+              <i data-lucide="external-link" class="icon"></i>
+              ${text.length > 50 ? text.substring(0, 50) + '...' : text}
+            </a>
+          </div>
+        `;
       }
 
       return `<div class="bullet">${text}</div>`;
+    }
+
+    function getFileNameFromUrl(url) {
+      // Try to extract filename from URL
+      if (url.includes('sheets.google.com')) return 'Google Sheet';
+      if (url.includes('docs.google.com/spreadsheets')) return 'Google Sheet';
+      if (url.includes('docs.google.com/document')) return 'Google Doc';
+      if (url.includes('docs.google.com/presentation')) return 'Google Slides';
+      if (url.includes('drive.google.com')) return 'Google Drive File';
+
+      const match = url.match(/\/([^/?]+\.[a-z]{2,4})(\?|$)/i);
+      if (match) return match[1];
+
+      return 'File Link';
+    }
+
+    function getFileIcon(url) {
+      if (url.includes('sheet') || url.includes('.xlsx') || url.includes('.xls') || url.includes('.csv')) return 'file-spreadsheet';
+      if (url.includes('doc') || url.includes('.docx') || url.includes('.doc')) return 'file-text';
+      if (url.includes('.pdf')) return 'file-text';
+      if (url.includes('presentation') || url.includes('.pptx') || url.includes('.ppt')) return 'file-presentation';
+      if (url.includes('.zip')) return 'file-archive';
+      return 'file';
     }
 
     function openImageModal(imageUrl) {
