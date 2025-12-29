@@ -1721,7 +1721,7 @@
       const requirements = section.requirements || [];
       const completedReqs = requirements.filter(r => r.status === 'Complete').length;
       const imageUrls = getImageUrls(section.image);
-      const linkUrls = section.links ? section.links.split(',').map(l => l.trim()).filter(l => l) : [];
+      const linkUrls = getLinksArray(section.links);
 
       return `
         <div class="section expanded" data-id="${section.id}">
@@ -1758,19 +1758,41 @@
     function getImageUrls(image) {
       if (!image) return [];
 
+      // Handle if image is already an array
+      if (Array.isArray(image)) {
+        return image.map(url => convertGoogleDriveUrl(url));
+      }
+
       // Split by comma for multiple images
       const urls = image.split(',').map(url => url.trim()).filter(url => url);
 
-      return urls.map(url => {
-        // Convert Google Drive sharing link to direct image link
-        if (url.includes('drive.google.com/file/d/')) {
-          const fileId = url.match(/\/d\/([a-zA-Z0-9_-]+)/)?.[1];
-          if (fileId) {
-            return `https://lh3.googleusercontent.com/d/${fileId}`;
-          }
+      return urls.map(url => convertGoogleDriveUrl(url));
+    }
+
+    function convertGoogleDriveUrl(url) {
+      if (url.includes('drive.google.com/file/d/')) {
+        const fileId = url.match(/\/d\/([a-zA-Z0-9_-]+)/)?.[1];
+        if (fileId) {
+          return `https://lh3.googleusercontent.com/d/${fileId}`;
         }
-        return url;
-      });
+      }
+      return url;
+    }
+
+    function getLinksArray(links) {
+      if (!links) return [];
+
+      // Handle if links is already an array
+      if (Array.isArray(links)) {
+        return links.filter(l => l);
+      }
+
+      // Handle string (comma-separated)
+      if (typeof links === 'string') {
+        return links.split(',').map(l => l.trim()).filter(l => l);
+      }
+
+      return [];
     }
 
     function renderRequirement(req) {
