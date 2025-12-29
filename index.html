@@ -364,6 +364,23 @@
       display: block;
     }
 
+    .section-image {
+      margin-bottom: 16px;
+    }
+
+    .section-image img {
+      max-width: 100%;
+      max-height: 400px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 150ms ease-out;
+      border: 1px solid var(--grey-light);
+    }
+
+    .section-image img:hover {
+      opacity: 0.9;
+    }
+
     /* Requirements */
     .requirement {
       border: 1px solid var(--grey-light);
@@ -1661,6 +1678,7 @@
     function renderSection(section) {
       const requirements = section.requirements || [];
       const completedReqs = requirements.filter(r => r.status === 'Complete').length;
+      const imageUrl = getSectionImageUrl(section.image);
 
       return `
         <div class="section expanded" data-id="${section.id}">
@@ -1672,11 +1690,30 @@
             <span class="section-count">${completedReqs}/${requirements.length}</span>
           </div>
           <div class="section-content">
+            ${imageUrl ? `
+              <div class="section-image">
+                <img src="${imageUrl}" alt="${section.name}" onclick="openImageModal('${imageUrl}')">
+              </div>
+            ` : ''}
             ${requirements.map(req => renderRequirement(req)).join('')}
             ${requirements.length === 0 ? '<p style="color: var(--grey-medium); font-size: 14px;">No requirements in this section.</p>' : ''}
           </div>
         </div>
       `;
+    }
+
+    function getSectionImageUrl(image) {
+      if (!image) return null;
+
+      // Convert Google Drive sharing link to direct image link
+      if (image.includes('drive.google.com/file/d/')) {
+        const fileId = image.match(/\/d\/([a-zA-Z0-9_-]+)/)?.[1];
+        if (fileId) {
+          return `https://lh3.googleusercontent.com/d/${fileId}`;
+        }
+      }
+
+      return image;
     }
 
     function renderRequirement(req) {
