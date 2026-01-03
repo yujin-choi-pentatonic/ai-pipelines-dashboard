@@ -655,6 +655,16 @@
       white-space: pre-wrap;
     }
 
+    .bullet-text code {
+      font-family: 'Atkinson Hyperlegible Mono', monospace;
+      font-size: 14px;
+      background: var(--white);
+      border: 1px solid var(--grey-medium);
+      border-radius: 4px;
+      padding: 2px 6px;
+      color: var(--blue);
+    }
+
     .bullet-image {
       padding: 8px 0;
     }
@@ -1957,7 +1967,14 @@
         `;
       }
 
-      return `<div class="bullet"><span class="bullet-dot"></span><span class="bullet-text">${text}</span></div>`;
+      // Parse inline code (backticks)
+      const formattedText = parseInlineCode(text);
+      return `<div class="bullet"><span class="bullet-dot"></span><span class="bullet-text">${formattedText}</span></div>`;
+    }
+
+    function parseInlineCode(text) {
+      // Replace `code` with <code>code</code>
+      return text.replace(/`([^`]+)`/g, '<code>$1</code>');
     }
 
     function getFileNameFromUrl(url) {
