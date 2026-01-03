@@ -1993,7 +1993,7 @@
 
     function renderTechnology(tech) {
       const stageClass = tech.stage?.toLowerCase() || '';
-      const links = tech.links || [];
+      const links = parseTechLinks(tech.techLinks || tech.links);
       const imageUrls = getImageUrls(tech.image);
 
       return `
@@ -2031,6 +2031,25 @@
           ` : ''}
         </div>
       `;
+    }
+
+    function parseTechLinks(links) {
+      if (!links) return [];
+
+      // Already an array of objects (JSON format)
+      if (Array.isArray(links)) {
+        return links.filter(l => l && l.url);
+      }
+
+      // String format: "URL|Label, URL|Label" or just "URL, URL"
+      if (typeof links === 'string') {
+        return links.split(',').map(l => l.trim()).filter(l => l).map(link => {
+          const parsed = parseLinkWithLabel(link);
+          return { url: parsed.url, label: parsed.label };
+        });
+      }
+
+      return [];
     }
 
     function toggleClientData(id) {
