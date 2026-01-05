@@ -1526,10 +1526,11 @@
     <h1>AI Pipelines<span class="underscore">_</span></h1>
 
     <div id="configBanner" class="config-banner">
-      <p>Enter your Google Apps Script Web App URL to connect:</p>
+      <p>Enter your API URL and access token to connect:</p>
       <div class="config-input">
         <input type="text" id="apiUrlInput" placeholder="https://script.google.com/macros/s/...">
-        <button onclick="saveApiUrl()">Connect</button>
+        <input type="password" id="apiTokenInput" placeholder="Access Token" style="width: 200px;">
+        <button onclick="saveConfig()">Connect</button>
       </div>
     </div>
 
@@ -1537,6 +1538,10 @@
       <button class="refresh-btn" onclick="loadData()">
         <i data-lucide="refresh-cw" class="icon"></i>
         Refresh
+      </button>
+      <button class="refresh-btn" onclick="showSettings()" style="border-color: var(--grey-medium); color: var(--grey-medium);">
+        <i data-lucide="settings" class="icon"></i>
+        Settings
       </button>
       <span id="lastUpdated" class="last-updated"></span>
     </div>
@@ -1550,27 +1555,76 @@
   </div>
 
   <script>
-    let API_URL = localStorage.getItem('pipelineApiUrl') || 'https://script.google.com/macros/s/AKfycbxFlCrP50I-WM4i7dOfuIcLLFmSoPXCqVNtaIlQCo3Nl3ia8wBwj_YumupHBAS80HOt7Q/exec';
+    let API_URL = localStorage.getItem('pipelineApiUrl') || '';
+    let API_TOKEN = localStorage.getItem('pipelineApiToken') || '';
     let allData = [];
     let activeCategoryId = null;
     let activePipelineId = null;
     let diagramDataStore = {};
 
-    if (API_URL) {
+    if (API_URL && API_TOKEN) {
       document.getElementById('configBanner').classList.add('hidden');
       loadData();
     } else {
-      document.getElementById('dashboard').innerHTML = '<p style="color: var(--grey-medium);">Please configure your Google Apps Script URL above to load data.</p>';
+      document.getElementById('dashboard').innerHTML = '<p style="color: var(--grey-medium);">Please configure your API URL and access token above to load data.</p>';
+      // Pre-fill any existing values
+      if (API_URL) document.getElementById('apiUrlInput').value = API_URL;
     }
 
-    function saveApiUrl() {
+    function saveConfig() {
       const url = document.getElementById('apiUrlInput').value.trim();
-      if (url) {
+      const token = document.getElementById('apiTokenInput').value.trim();
+      if (url && token) {
         API_URL = url;
+        API_TOKEN = token;
         localStorage.setItem('pipelineApiUrl', url);
+        localStorage.setItem('pipelineApiToken', token);
         document.getElementById('configBanner').classList.add('hidden');
         loadData();
+      } else {
+        alert('Please enter both API URL and access token.');
       }
+    }
+
+    function showSettings() {
+      document.getElementById('apiUrlInput').value = API_URL;
+      document.getElementById('apiTokenInput').value = '';
+      document.getElementById('apiTokenInput').placeholder = 'Enter new token or leave blank to keep current';
+      document.getElementById('configBanner').classList.remove('hidden');
+
+      // Update button to allow keeping current token
+      const button = document.querySelector('.config-input button');
+      button.textContent = 'Update';
+      button.onclick = updateConfig;
+    }
+
+    function updateConfig() {
+      const url = document.getElementById('apiUrlInput').value.trim();
+      const token = document.getElementById('apiTokenInput').value.trim();
+
+      if (!url) {
+        alert('Please enter the API URL.');
+        return;
+      }
+
+      API_URL = url;
+      localStorage.setItem('pipelineApiUrl', url);
+
+      // Only update token if a new one was entered
+      if (token) {
+        API_TOKEN = token;
+        localStorage.setItem('pipelineApiToken', token);
+      }
+
+      document.getElementById('configBanner').classList.add('hidden');
+
+      // Reset button for next time
+      const button = document.querySelector('.config-input button');
+      button.textContent = 'Connect';
+      button.onclick = saveConfig;
+      document.getElementById('apiTokenInput').placeholder = 'Access Token';
+
+      loadData();
     }
 
     async function loadData() {
@@ -1579,7 +1633,7 @@
         document.getElementById('categoryTabs').innerHTML = '';
         document.getElementById('pipelineTabs').innerHTML = '';
 
-        const response = await fetch(`${API_URL}?action=getData`);
+        const response = await fetch(`${API_URL}?action=getData&token=${encodeURIComponent(API_TOKEN)}`);
         const result = await response.json();
 
         if (result.success) {
@@ -1593,12 +1647,16 @@
           renderPipelineTabs();
           renderDashboard();
           document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+        } else if (result.error === 'Unauthorized') {
+          document.getElementById('configBanner').classList.remove('hidden');
+          document.getElementById('dashboard').innerHTML = '<p style="color: var(--coral);">Invalid access token. Please check your token and try again.</p>';
         } else {
           document.getElementById('dashboard').innerHTML = '<p style="color: var(--coral);">Error loading data. Please check your API URL.</p>';
         }
       } catch (error) {
         console.error('Error:', error);
-        document.getElementById('dashboard').innerHTML = '<p style="color: var(--coral);">Failed to connect. Please check your API URL and try again.</p>';
+        document.getElementById('configBanner').classList.remove('hidden');
+        document.getElementById('dashboard').innerHTML = '<p style="color: var(--coral);">Failed to connect. Please check your API URL and token.</p>';
       }
 
       lucide.createIcons();
@@ -2156,6 +2214,7 @@
           method: 'POST',
           body: JSON.stringify({
             action: 'updateRequirementStatus',
+            token: API_TOKEN,
             id: id,
             status: newStatus
           })
@@ -2193,6 +2252,7 @@
           method: 'POST',
           body: JSON.stringify({
             action: 'updateTechnologyProgress',
+            token: API_TOKEN,
             id: id,
             progress: value
           })
@@ -2250,6 +2310,7 @@
           method: 'POST',
           body: JSON.stringify({
             action: 'addSignoff',
+            token: API_TOKEN,
             requirementId: reqId,
             personName: personName
           })
@@ -2304,6 +2365,7 @@
           method: 'POST',
           body: JSON.stringify({
             action: 'removeSignoff',
+            token: API_TOKEN,
             id: signoffId
           })
         });

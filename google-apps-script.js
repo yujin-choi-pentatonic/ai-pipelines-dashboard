@@ -12,12 +12,36 @@
  * 8. Technologies: id, requirementId, name, type, stage, progress, links
  * 9. Signoffs: id, requirementId, personName, signedAt
  * 10. Diagrams: id, clientId, data (JSON)
+ *
+ * SECURITY:
+ * Change the SECRET_TOKEN below to a secure random string.
+ * Share this token only with authorized users.
  */
+
+// ⚠️ CHANGE THIS TOKEN TO YOUR OWN SECRET VALUE
+const SECRET_TOKEN = 'CHANGE_ME_TO_A_SECURE_RANDOM_STRING';
+
+function validateToken(token) {
+  return token === SECRET_TOKEN;
+}
+
+function unauthorizedResponse() {
+  return ContentService.createTextOutput(JSON.stringify({
+    error: 'Unauthorized',
+    message: 'Invalid or missing access token'
+  })).setMimeType(ContentService.MimeType.JSON);
+}
 
 function doGet(e) {
   var output;
 
   try {
+    // Validate token
+    const token = e.parameter.token;
+    if (!validateToken(token)) {
+      return unauthorizedResponse();
+    }
+
     const action = e.parameter.action;
 
     if (action === 'getData') {
@@ -38,6 +62,12 @@ function doPost(e) {
 
   try {
     const data = JSON.parse(e.postData.contents);
+
+    // Validate token
+    if (!validateToken(data.token)) {
+      return unauthorizedResponse();
+    }
+
     const action = data.action;
 
     if (action === 'updateRequirementStatus') {
