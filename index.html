@@ -338,6 +338,18 @@
       padding: 4px 0;
     }
 
+    .client-data-text-link {
+      color: var(--black);
+      text-decoration: none;
+      border-bottom: 1px solid var(--grey-medium);
+      transition: all 150ms ease-out;
+    }
+
+    .client-data-text-link:hover {
+      color: var(--blue);
+      border-bottom-color: var(--blue);
+    }
+
     /* Requirement Sections */
     .section {
       margin-bottom: 24px;
@@ -2046,33 +2058,37 @@
     function renderClientDataItem(text) {
       if (!text) return '';
 
-      // Check if it's a file link
-      const filePattern = /\.(xlsx?|csv|pdf|docx?|pptx?|zip|txt)(\?.*)?$/i;
-      const isFileLink = filePattern.test(text) ||
-        text.includes('docs.google.com') ||
-        text.includes('sheets.google.com') ||
-        text.includes('drive.google.com');
+      // Check for Name|URL format (name is clickable link)
+      if (text.includes('|')) {
+        const parts = text.split('|');
+        const firstPart = parts[0].trim();
+        const secondPart = parts[1].trim();
 
-      if (isFileLink && (text.startsWith('http://') || text.startsWith('https://'))) {
-        const { url, label } = parseLinkWithLabel(text);
-        const fileIcon = getFileIcon(url);
-        return `
-          <div class="client-data-item client-data-link">
-            <a href="${url}" target="_blank" class="file-link">
-              <i data-lucide="${fileIcon}" class="icon"></i>
-              ${label}
-            </a>
-          </div>
-        `;
+        // Check if second part is a URL
+        if (secondPart.startsWith('http://') || secondPart.startsWith('https://')) {
+          return `
+            <div class="client-data-item">
+              <a href="${secondPart}" target="_blank" class="client-data-text-link">${firstPart}</a>
+            </div>
+          `;
+        }
       }
 
-      // Check if it's any other URL
+      // Check if it's a standalone URL (no label)
       if (text.startsWith('http://') || text.startsWith('https://')) {
-        const { url, label } = parseLinkWithLabel(text);
+        const filePattern = /\.(xlsx?|csv|pdf|docx?|pptx?|zip|txt)(\?.*)?$/i;
+        const isFileLink = filePattern.test(text) ||
+          text.includes('docs.google.com') ||
+          text.includes('sheets.google.com') ||
+          text.includes('drive.google.com');
+
+        const label = getFileNameFromUrl(text);
+        const fileIcon = isFileLink ? getFileIcon(text) : 'external-link';
+
         return `
           <div class="client-data-item client-data-link">
-            <a href="${url}" target="_blank" class="file-link">
-              <i data-lucide="external-link" class="icon"></i>
+            <a href="${text}" target="_blank" class="file-link">
+              <i data-lucide="${fileIcon}" class="icon"></i>
               ${label}
             </a>
           </div>
