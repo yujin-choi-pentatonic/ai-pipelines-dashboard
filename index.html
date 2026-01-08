@@ -330,6 +330,14 @@
       flex-shrink: 0;
     }
 
+    .client-data-link::before {
+      display: none;
+    }
+
+    .client-data-link {
+      padding: 4px 0;
+    }
+
     /* Requirement Sections */
     .section {
       margin-bottom: 24px;
@@ -1798,7 +1806,7 @@
                 <span class="client-data-count">${clientData.length} items</span>
               </div>
               <div class="client-data-list">
-                ${clientData.map(d => `<div class="client-data-item">${d.item}</div>`).join('')}
+                ${clientData.map(d => renderClientDataItem(d.item)).join('')}
               </div>
             </div>
           ` : ''}
@@ -2033,6 +2041,47 @@
     function parseInlineCode(text) {
       // Replace `code` with <code>code</code>
       return text.replace(/`([^`]+)`/g, '<code>$1</code>');
+    }
+
+    function renderClientDataItem(text) {
+      if (!text) return '';
+
+      // Check if it's a file link
+      const filePattern = /\.(xlsx?|csv|pdf|docx?|pptx?|zip|txt)(\?.*)?$/i;
+      const isFileLink = filePattern.test(text) ||
+        text.includes('docs.google.com') ||
+        text.includes('sheets.google.com') ||
+        text.includes('drive.google.com');
+
+      if (isFileLink && (text.startsWith('http://') || text.startsWith('https://'))) {
+        const { url, label } = parseLinkWithLabel(text);
+        const fileIcon = getFileIcon(url);
+        return `
+          <div class="client-data-item client-data-link">
+            <a href="${url}" target="_blank" class="file-link">
+              <i data-lucide="${fileIcon}" class="icon"></i>
+              ${label}
+            </a>
+          </div>
+        `;
+      }
+
+      // Check if it's any other URL
+      if (text.startsWith('http://') || text.startsWith('https://')) {
+        const { url, label } = parseLinkWithLabel(text);
+        return `
+          <div class="client-data-item client-data-link">
+            <a href="${url}" target="_blank" class="file-link">
+              <i data-lucide="external-link" class="icon"></i>
+              ${label}
+            </a>
+          </div>
+        `;
+      }
+
+      // Regular text with inline code support
+      const formattedText = parseInlineCode(text);
+      return `<div class="client-data-item">${formattedText}</div>`;
     }
 
     function getFileNameFromUrl(url) {
